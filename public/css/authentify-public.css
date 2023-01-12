@@ -1,0 +1,18 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+
+ .edddfe-formbuilder-section{
+    display: flex;
+    margin-top: 10px;
+ }
+
+ .edddfe-formbuilder-section label{
+    width: 20%;
+    font-weight: 600;
+}
+
+ .edddfe-formbuilder-section input{
+    width: 70%;
+ }
