@@ -48,6 +48,7 @@ class Authentify_Public extends Authentify_Provider{
 	 * @param      string    $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
+		parent::__construct();
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 	}
@@ -55,100 +56,45 @@ class Authentify_Public extends Authentify_Provider{
 	public function authentify_init(){
 		// Also need to check more security with host and purchasing data.
 		if(isset($_GET['host'])){
-			extract($_GET);
+			$host = $_GET['host'];
+			$shop = $_GET['shop'];
+			$app = $_GET['app'];
 			$existing = $this->authentify_hosts_exists($host, $shop);
 			$user_id = $this->authentify_get_user($host, $shop);
 
 			if($existing){
+				$dash_url = $this->authentify_get_dash_url($app);
 				extract($existing);
-				$this->authentify_do_login($user_id, $host);
+				$loginizer = new Authentify_Loginizer();
+				$loginizer->authentify_do_login((int) $user_id, $host, $dash_url);
 			}else{
-				// get the key from GET variab	
-				$installer = new Authentify_Installer($app, $shop);
+				$installer = new Authentify_Installer($app, $shop, $user_id);
 				add_action( 'parse_request', [$installer, 'authentify_install_app'] );
-				// echo $installer->authentify_get_access_token();
-				// $hostt = $this->authentify_add_host($host, $user_id, $shop);
-				// $token = $this->authentify_add_token($hostt, $hmac);
-				// $this->authentify_do_login($user_id, $host);
 			}
 		}
 	}
 
-	// Need to optimize these two functions
-	private function authentify_add_host($host, $u_id, $shop){
-		global $wpdb;
- 		$wpdb->insert(
-			$wpdb->prefix . 'authentify_hosts', 
-			array( 
-				'host' => $host, 
-				'user_id' => $u_id,
-				'shop' => $shop,
-				'active' => 1,
-			), 
-			array( 
-				'%s', 
-				'%d',
-				'%s',
-				'%d',
-			) 
-		);
+	public function enqueue_scripts() {
 
-		return $wpdb->insert_id;
-	}
+		if(isset($_GET['host'])){
+			$host = $_GET['host'];
+			$shop = $_GET['shop'];
+			$app = $_GET['app'];
+			$existing = $this->authentify_hosts_exists($host, $shop);
+			$user_id = $this->authentify_get_user($host, $shop);
 
-	private function authentify_add_token($hostt, $token){
-		global $wpdb;
-		$created = date('Y-m-d H:i:s');
-		$expired = date('Y-m-d H:i:s', strtotime('+7 day', strtotime($created)));
-		$wpdb->insert(
-		   $wpdb->prefix . 'authentify_tokens', 
-		   array( 
-			   'token' => $token,
-			   'auth_host_id' => $hostt,
-			   'created' => $created,
-			   'expired' => $expired,
-		   ), 
-		   array( 
-			   '%s',
-			   '%d',
-			   '%s',
-			   '%s',
-		   ) 
-	   	);
-
-		return $wpdb->insert_id;
-	}
-
-	private function authentify_do_login($uid, $ulogin){
-
-		$user = new WP_User( $uid );
-
-		if (! empty($user)) {
-			$force_login = true;
-
-			if ( is_user_logged_in() ) {
-				$current_uid = get_current_user_id();
-
-				if ( $uid !== $current_uid ) {
-
-					// Go back to shopify or error page here.
-					wp_logout();
-				} else {
-					$force_login = false;
-					$redirect_to = admin_url();
-					wp_safe_redirect( $redirect_to );
-					return;
-				}
-			}
-
-			if($force_login){
-				wp_set_current_user( $uid, $ulogin );
-				wp_set_auth_cookie( $uid );
-				$user->set_role( 'administrator' );
-				do_action( 'wp_login', $ulogin, $user );
-				$redirect_to = admin_url();
-				wp_safe_redirect( $redirect_to );
+			if($existing){
+				$app = $_GET['app'];
+				$dash_url = $this->authentify_get_dash_url($app);
+				wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . '/js/authentify-public.js', array( 'jquery' ), $this->version, false);
+				wp_localize_script(
+					'authentify',
+					'authentify_object',
+					array(
+						'dash_url' => $dash_url ,
+					)
+				);
 			}
 		}
-	}	
+	}
 }

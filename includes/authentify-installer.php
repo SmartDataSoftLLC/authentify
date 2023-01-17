@@ -24,6 +24,7 @@ class Authentify_Installer extends Authentify_Installer_Core{
 
 	private $app_key = '';
 	private $shop = '';
+	private $user = '';
 
 	/**
 	 * Initialize the class and set its properties.
@@ -32,21 +33,20 @@ class Authentify_Installer extends Authentify_Installer_Core{
 	 * @param      string    $plugin_name       The name of this plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct( $key, $shop ) {
+	public function __construct( $key, $shop, $user ) {
 		// this key will be used to get the api key dynamiccaly saved at database.
 		$this->app_key = $key;
 		$this->shop = $shop;
+		$this->user = $user;
 		parent::__construct( $this->app_key );
 
-		add_rewrite_rule( $this->slug . '/([a-z0-9-]+)[/]?$', 'index.php?' . $this->slug . '=1', 'top' );
-		add_rewrite_rule( $this->slug_redirect . '/([a-z0-9-]+)[/]?$', 'index.php?' . $this->slug_redirect . '=1', 'top' );
+		add_rewrite_rule( $this->slug . '/([a-z0-9-]+)[/]?$', 'index.php?app=' . $key, 'top' );
+		add_rewrite_rule( $this->slug_redirect . '/([a-z0-9-]+)[/]?$', 'index.php?app=' . $key, 'top' );
 		add_filter( 'query_vars', function( $query_vars ) {
-			$query_vars[] = $this->slug;
-			$query_vars[] = $this->slug_redirect;
+			$query_vars[] = 'app';
 			$query_vars[] = 'hmac';
 			$query_vars[] = 'code';
 			$query_vars[] = 'host';
-			$query_vars[] = 'shop';
 			$query_vars[] = 'timestamp';
 
 			return $query_vars;
@@ -54,11 +54,12 @@ class Authentify_Installer extends Authentify_Installer_Core{
 	}
 
 	public function authentify_install_app($param){
-		if (isset($param->query_vars[$this->slug]) && $param->query_vars[$this->slug] == 1) {
+
+		if (isset($param->query_vars['app']) && $param->query_vars['app'] == $this->app_key && $param->query_vars['pagename'] == $this->slug) {
 			
 			// Need to get this url from a function
 			$param_qs = [
-				$this->slug . '_redirect' => $this->app_key,
+				'app' => $this->app_key,
 			];
 			$redirect_url = get_home_url() . '/' . $this->slug . '_redirect/?' . http_build_query($param_qs);
 			// Build install/approval URL to redirect to
@@ -66,18 +67,22 @@ class Authentify_Installer extends Authentify_Installer_Core{
 
 			// Redirect
 			header("Location: " . $install_url);
-			// wp_safe_redirect( $install_url );
 			die();
-		}elseif(isset($param->query_vars[$this->slug_redirect]) && $param->query_vars[$this->slug_redirect] == $this->app_key){
-			$hmac = $param->query_vars['hmac'];
-			unset($param->query_vars['hmac']);
-			// unset($param->query_vars['page']);
-			// unset($param->query_vars['pagename']);
-			unset($param->query_vars[$this->slug_redirect]);
-			ksort($param->query_vars); // Sort params lexographically
-			// $computed_hmac = hash_hmac('sha256', http_build_query($param->query_vars), $this->authentify_get_install_data('secret'));
+		}elseif(isset($param->query_vars['app']) && $param->query_vars['app'] == $this->app_key && $param->query_vars['pagename'] == $this->slug_redirect){
+			
+			$params = $param->query_vars;
+			$hmac = $params['hmac'];
+			$host = $params['host'];
+			$params['shop'] = $this->shop;
+			unset($params['page']);
+			unset($params['pagename']);
+			unset($params['hmac']);
+			// unset($params['app']);			
+			ksort($params); // Sort params lexographically
+			$computed_hmac = hash_hmac('sha256', http_build_query($params), $this->authentify_get_install_data('secret'));
+
 			// Use hmac data to check that the response is from Shopify or not
-			// if (hash_equals($hmac, $computed_hmac)) {
+			if (hash_equals($hmac, $computed_hmac)) {
 				// Set variables for our request
 				$query = array(
 					"client_id" => $this->authentify_get_install_data('api_key'), // Your API key
@@ -85,7 +90,7 @@ class Authentify_Installer extends Authentify_Installer_Core{
 					"code" => $param->query_vars['code'] // Grab the access key from the URL
 				);
 				// Generate access token URL
-				$access_token_url = "https://" . $param->query_vars['shop'] . "/admin/oauth/access_token";
+				$access_token_url = "https://" . $params['shop'] . "/admin/oauth/access_token";
 				// Configure curl client and execute request
 				$ch = curl_init();
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -94,45 +99,32 @@ class Authentify_Installer extends Authentify_Installer_Core{
 				curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($query));
 				$result = curl_exec($ch);
 				curl_close($ch);
-				// // Store the access token
+				// Store the access token
 				$result = json_decode($result, true);
-				// die(__FILE__ . ' : ' . __LINE__);
+
 				if(isset($result['access_token'])){
 					$access_token = $result['access_token'];
 					$this->authentify_set_acc_token($access_token);
 				}
-				
-				
-				// header("Location: " . $install_url);
-				// die();
-				return $access_token;
-			// } else {
-			// 	// Someone is trying to be shady!
-			// 	die('This request is NOT from Shopify!');
-			// }
+
+				$hostt = $this->db_instance->authentify_add_host($host, $this->user, $this->shop);
+				$token = $this->db_instance->authentify_add_token($this->app_key, $this->authentify_get_access_token());
+				$token = $this->db_instance->authentify_add_happ($hostt, $this->app_key);
+				$this->authentify_do_login($host);
+			} else {
+				// Someone is trying to be shady!
+				die('This request is NOT from Shopify!');
+			}
 		}
 		return;
 	}
 
-	
-
 	public function authentify_get_access_token(){
-		echo 'Hello 1 <br>';
-		echo __FILE__ . ' : ' . __LINE__;
 		return $this->authentify__get_access_token();
 	}
-}
 
-if (!function_exists('write_log')) {
-
-	function write_log($log) {
-		if (true === WP_DEBUG) {
-			if (is_array($log) || is_object($log)) {
-				error_log(print_r($log, true));
-			} else {
-				error_log($log);
-			}
-		}
+	private function authentify_do_login($h){
+		$loginizer = new Authentify_Loginizer();
+		$loginizer->authentify_do_login($this->user, $h, $this->authentify_get_install_data('dash_menu_url'));
 	}
-
 }

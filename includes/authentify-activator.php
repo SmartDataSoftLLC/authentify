@@ -50,6 +50,7 @@ class Authentify_Activator {
 			app_key varchar(255) NOT NULL,
 			app_secret varchar(255) NOT NULL,
 			app_sopes varchar(255) NOT NULL,
+			dash_menu_url varchar(255) NOT NULL,
 			created DATETIME,
 			expired DATETIME,
 			PRIMARY KEY  (auth_app_id)
@@ -57,7 +58,7 @@ class Authentify_Activator {
 		$table_name = $wpdb->prefix . "authentify_tokens"; 
 		$sql[] = "CREATE TABLE $table_name (
 			auth_token_id mediumint(9) NOT NULL AUTO_INCREMENT,
-			app_unique_id mediumint(9) NOT NULL,
+			app_unique_id int(20) NOT NULL,
 			token varchar(255) NOT NULL,
 			created DATETIME,
 			expired DATETIME,

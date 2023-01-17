@@ -22,7 +22,7 @@
  */
 class Authentify_Installer_Core {
 
-	private $db_instance;
+	protected $db_instance;
 	private $app_name = '';
 	protected $slug = '';
 	private $api_key = '';
@@ -30,6 +30,7 @@ class Authentify_Installer_Core {
 	private $scopes = '';
 	private $access_token = '';
 	protected $slug_redirect = '';
+	protected $dash_menu_url = '';
 
 	/**
 	 * Initialize the class and set its properties.
@@ -54,6 +55,7 @@ class Authentify_Installer_Core {
 			$this->secret = $app_secret;
 			$this->scopes = implode(",",json_decode($app_sopes, true));
 			$this->slug_redirect = $app_slug . '_redirect';
+			$this->dash_menu_url = $dash_menu_url;
 		}
 	}
 

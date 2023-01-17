@@ -82,6 +82,7 @@ class Authentify{
 		require_once AUTHENTIFY_INCLUDES_DIR . '/authentify-i18n.php';
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/authentify-provider.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/authentify-loginizer.php';
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/authentify-admin.php';
 
@@ -132,6 +133,7 @@ class Authentify{
 		$this->plugin_public = new Authentify_Public( $this->get_plugin_name(), $this->get_version() );
 
 		add_action( 'init', array( $this->plugin_public, 'authentify_init' ) );
+		add_action( 'wp_enqueue_scripts', [$this->plugin_public, 'enqueue_scripts'] );
 	}
 
 	/**
