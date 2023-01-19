@@ -51,42 +51,25 @@ final class Authentify_Db_Core {
 		return $this->authentifydb->insert_id;
 	}
 
-	public function authentify_add_token($appid, $token){
+	public function authentify_add_token($appid, $token, $hid){
 		//chech the init nonce of this class.
-		$created = date('Y-m-d H:i:s');
-		$expired = date('Y-m-d H:i:s', strtotime('+7 day', strtotime($created)));
+		$created = date('Y-m-d');
+		$expired = date('Y-m-d', strtotime('+7 day', strtotime($created)));
 		$this->authentifydb->insert(
 			$this->authentifydb->prefix . 'authentify_tokens', 
 			array( 
 				'app_unique_id' => $appid,
+				'auth_host_id' => $hid,
 				'token' => $token,
 				'created' => $created,
 				'expired' => $expired,
 			), 
 			array( 
 				'%d',
-				'%s',
-				'%s',
-				'%s',
-			) 
-	   	);
-
-		return $this->authentifydb->insert_id;
-	}
-
-	public function authentify_add_happ($hostt, $appid){
-		//chech the init nonce of this class.
-		$created = date('Y-m-d H:i:s');
-		$expired = date('Y-m-d H:i:s', strtotime('+7 day', strtotime($created)));
-		$this->authentifydb->insert(
-			$this->authentifydb->prefix . 'authentify_hosted_app', 
-			array( 
-				'app_unique_id' => $appid,
-				'auth_host_id' => $hostt,
-			), 
-			array( 
 				'%d',
-				'%d',
+				'%s',
+				'%s',
+				'%s',
 			) 
 	   	);
 

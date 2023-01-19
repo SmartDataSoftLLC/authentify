@@ -55,8 +55,6 @@ class Authentify_Admin{
 	}
 
 	public function authentify_admin_init(){
-
-		// die(__FILE__ . ' : ' . __LINE__);
-
+		
 	}
 }

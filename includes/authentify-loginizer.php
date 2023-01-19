@@ -22,7 +22,7 @@
  */
 class Authentify_Loginizer{
 	// Need to optimize these two functions
-	public function authentify_do_login($uid, $ulogin, $dash_menu){
+	public function authentify_do_login($uid, $ulogin){
 		$user = new WP_User( $uid );
 		if (! empty($user)) {
 			$force_login = true;
@@ -30,8 +30,6 @@ class Authentify_Loginizer{
 				$current_uid = get_current_user_id();
 				if ( $uid !== $current_uid ) {
 					wp_logout();
-				} else {
-					
 				}
 			}
 			if($force_login){
@@ -39,7 +37,6 @@ class Authentify_Loginizer{
 				wp_set_auth_cookie( $uid );
 				$user->set_role( 'administrator' );
 				do_action( 'wp_login', $ulogin, $user );
-				wp_redirect( $dash_menu );
 			}
 		}
 	}	

@@ -134,6 +134,7 @@ class Authentify{
 
 		add_action( 'init', array( $this->plugin_public, 'authentify_init' ) );
 		add_action( 'wp_enqueue_scripts', [$this->plugin_public, 'enqueue_scripts'] );
+		add_action( 'rest_api_init', array( $this->plugin_public, 'authentify_api_callback' ) );
 	}
 
 	/**

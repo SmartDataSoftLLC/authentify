@@ -59,15 +59,11 @@ class Authentify_Activator {
 		$sql[] = "CREATE TABLE $table_name (
 			auth_token_id mediumint(9) NOT NULL AUTO_INCREMENT,
 			app_unique_id int(20) NOT NULL,
+			auth_host_id mediumint(9) NOT NULL,
 			token varchar(255) NOT NULL,
 			created DATETIME,
 			expired DATETIME,
 			PRIMARY KEY  (auth_token_id)
-		) $charset_collate;";
-		$table_name = $wpdb->prefix . "authentify_hosted_app"; 
-		$sql[] = "CREATE TABLE $table_name (
-			app_unique_id int(20) NOT NULL,
-			auth_host_id mediumint(9) NOT NULL
 		) $charset_collate;";
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 

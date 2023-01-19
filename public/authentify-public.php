@@ -54,20 +54,20 @@ class Authentify_Public extends Authentify_Provider{
 	}
 
 	public function authentify_init(){
+
 		// Also need to check more security with host and purchasing data.
 		if(isset($_GET['host'])){
 			$host = $_GET['host'];
 			$shop = $_GET['shop'];
-			$app = $_GET['app'];
 			$existing = $this->authentify_hosts_exists($host, $shop);
 			$user_id = $this->authentify_get_user($host, $shop);
 
 			if($existing){
-				$dash_url = $this->authentify_get_dash_url($app);
 				extract($existing);
 				$loginizer = new Authentify_Loginizer();
-				$loginizer->authentify_do_login((int) $user_id, $host, $dash_url);
+				$loginizer->authentify_do_login((int) $user_id, $host);
 			}else{
+				$app = $_GET['app'];
 				$installer = new Authentify_Installer($app, $shop, $user_id);
 				add_action( 'parse_request', [$installer, 'authentify_install_app'] );
 			}
@@ -76,25 +76,51 @@ class Authentify_Public extends Authentify_Provider{
 
 	public function enqueue_scripts() {
 
-		if(isset($_GET['host'])){
-			$host = $_GET['host'];
-			$shop = $_GET['shop'];
-			$app = $_GET['app'];
-			$existing = $this->authentify_hosts_exists($host, $shop);
-			$user_id = $this->authentify_get_user($host, $shop);
+		// if(isset($_GET['host'])){
+		// 	$host = $_GET['host'];
+		// 	$shop = $_GET['shop'];
+		// 	$app = $_GET['app'];
+		// 	$existing = $this->authentify_hosts_exists($host, $shop);
 
-			if($existing){
-				$app = $_GET['app'];
-				$dash_url = $this->authentify_get_dash_url($app);
-				wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . '/js/authentify-public.js', array( 'jquery' ), $this->version, false);
-				wp_localize_script(
-					'authentify',
-					'authentify_object',
-					array(
-						'dash_url' => $dash_url ,
-					)
-				);
-			}
-		}
+		// 	if($existing){
+		// 		$app = $_GET['app'];
+		// 		$dash_url = $this->authentify_get_dash_url($app) . '&app=' . $app;
+		// 		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . '/js/authentify-public.js', array( 'jquery' ), $this->version, false);
+		// 		wp_localize_script(
+		// 			'authentify',
+		// 			'authentify_object',
+		// 			array(
+		// 				'dash_url' => $dash_url ,
+		// 			)
+		// 		);
+		// 	}
+		// }
+	}
+
+	public function authentify_api_callback(){
+		register_rest_route( 'authentify_api/v1', '/uninstall-app/', 
+			array(
+				'method' => 'POST',
+				'callback' => [$this, 'authentify_app_uninstall'],
+			) 
+		);
+	}
+
+	public function authentify_app_uninstall($request){
+		echo '<pre>';
+		print_r($request->get_param( 'app' ));
+		echo '</pre>';
+		echo __FILE__ . ' : ' . __LINE__;
+		update_option('authentify_check_api', "hello there uninstalled");
+		die(__FILE__ . ' : ' . __LINE__);
+		// $data_args = $this->sanitize_request($request);
+		// if(!$data_args){
+			
+		// }		
+		// $this->cladstats_data($data_args);
+		// die(__FILE__ . ' : ' . __LINE__);
+		// $response = new WP_REST_Response($data_args);
+		// $response->set_status(200);
+		// return $response;
 	}
 }

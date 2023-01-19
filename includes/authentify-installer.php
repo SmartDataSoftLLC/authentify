@@ -39,6 +39,12 @@ class Authentify_Installer extends Authentify_Installer_Core{
 		$this->shop = $shop;
 		$this->user = $user;
 		parent::__construct( $this->app_key );
+		// try {
+		// 	parent::__construct( $this->app_key );
+		// } catch (Exception $e) {
+		// 	echo $e->getMessage();
+		// 	die(__FILE__ . ' : ' . __LINE__);
+		// }
 
 		add_rewrite_rule( $this->slug . '/([a-z0-9-]+)[/]?$', 'index.php?app=' . $key, 'top' );
 		add_rewrite_rule( $this->slug_redirect . '/([a-z0-9-]+)[/]?$', 'index.php?app=' . $key, 'top' );
@@ -89,8 +95,16 @@ class Authentify_Installer extends Authentify_Installer_Core{
 					"client_secret" => $this->authentify_get_install_data('secret'), // Your app credentials (secret key)
 					"code" => $param->query_vars['code'] // Grab the access key from the URL
 				);
+				echo '<pre>';
+				print_r($query);
+				echo '</pre>';
+				echo __FILE__ . ' : ' . __LINE__;
 				// Generate access token URL
 				$access_token_url = "https://" . $params['shop'] . "/admin/oauth/access_token";
+				echo '<pre>';
+				print_r($access_token_url);
+				echo '</pre>';
+				echo __FILE__ . ' : ' . __LINE__;
 				// Configure curl client and execute request
 				$ch = curl_init();
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -98,18 +112,35 @@ class Authentify_Installer extends Authentify_Installer_Core{
 				curl_setopt($ch, CURLOPT_POST, count($query));
 				curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($query));
 				$result = curl_exec($ch);
+				echo '<pre>';
+				print_r($ch);
+				echo '</pre>';
+				echo __FILE__ . ' : ' . __LINE__;
+				echo '<pre>';
+				print_r($result);
+				echo '</pre>';
+				echo __FILE__ . ' : ' . __LINE__;
 				curl_close($ch);
+				
 				// Store the access token
 				$result = json_decode($result, true);
-
+				
 				if(isset($result['access_token'])){
 					$access_token = $result['access_token'];
+					echo '<pre>';
+					print_r($access_token);
+					echo '</pre>';
+					echo __FILE__ . ' : ' . __LINE__;
 					$this->authentify_set_acc_token($access_token);
 				}
-
+				echo '<pre>';
+				print_r($this->authentify_get_access_token());
+				echo '</pre>';
+				echo __FILE__ . ' : ' . __LINE__;
+				// die(__FILE__ . ' : ' . __LINE__);
 				$hostt = $this->db_instance->authentify_add_host($host, $this->user, $this->shop);
-				$token = $this->db_instance->authentify_add_token($this->app_key, $this->authentify_get_access_token());
-				$token = $this->db_instance->authentify_add_happ($hostt, $this->app_key);
+				$token = $this->db_instance->authentify_add_token($this->app_key, $this->authentify_get_access_token(), $hostt);
+				$this->authentify_register_uninstallation($host);
 				$this->authentify_do_login($host);
 			} else {
 				// Someone is trying to be shady!
@@ -125,6 +156,84 @@ class Authentify_Installer extends Authentify_Installer_Core{
 
 	private function authentify_do_login($h){
 		$loginizer = new Authentify_Loginizer();
-		$loginizer->authentify_do_login($this->user, $h, $this->authentify_get_install_data('dash_menu_url'));
+		$loginizer->authentify_do_login($this->user, $h);
+	}
+
+	private function authentify_register_uninstallation($h){
+		$array = array(
+			'webhook' => array(
+				'topic' => 'app/uninstalled', 
+				'address' => 'https://essential-grid/wp-json/authentify_api/v1/uninstall-app/?app=' . $this->app_key . '&host=' . $h,
+				'format' => 'json',
+			)
+		);
+
+		$webhook = $this->authenti_shopify_call("/admin/api/2020-07/webhooks.json", $array, 'POST');
+		$webhook = json_decode($webhook['response'], true);
+		echo '<pre>';
+		print_r($webhook);
+		echo '</pre>';
+		echo __FILE__ . ' : ' . __LINE__;
+		die(__FILE__ . ' : ' . __LINE__);
+	}
+
+	private function authenti_shopify_call($api_endpoint, $query = array(), $method = 'GET', $request_headers = array()) {
+    
+		// Build URL
+		$url = $this->shop . $api_endpoint;
+		if (!is_null($query) && in_array($method, array('GET', 	'DELETE'))) {
+			$url = $url . "?" . http_build_query($query);
+		}
+		// Configure cURL
+		$curl = curl_init($url);
+		curl_setopt($curl, CURLOPT_HEADER, TRUE);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
+		curl_setopt($curl, CURLOPT_MAXREDIRS, 3);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+		// curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 3);
+		// curl_setopt($curl, CURLOPT_SSLVERSION, 3);
+		curl_setopt($curl, CURLOPT_USERAGENT, 'Authentify 1.0.0');
+		curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
+		curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+	
+		// Setup headers
+		$request_headers[] = "";
+		if (!is_null($this->authentify_get_access_token())) $request_headers[] = "X-Shopify-Access-Token: " . $this->authentify_get_access_token();
+		curl_setopt($curl, CURLOPT_HTTPHEADER, $request_headers);
+	
+		if ($method != 'GET' && in_array($method, array('POST', 'PUT'))) {
+			if (is_array($query)) $query = http_build_query($query);
+			curl_setopt ($curl, CURLOPT_POSTFIELDS, $query);
+		}
+		
+		// Send request to Shopify and capture any errors
+		$response = curl_exec($curl);
+		$error_number = curl_errno($curl);
+		$error_message = curl_error($curl);
+	
+		// Close cURL to be nice
+		curl_close($curl);
+	
+		// Return an error is cURL has a problem
+		if ($error_number) {
+			return $error_message;
+		} else {
+
+			// No error, return Shopify's response by parsing out the body and the headers
+			$response = preg_split("/\r\n\r\n|\n\n|\r\r/", $response, 2);
+			// Convert headers into an array
+			$headers = array();
+			$header_data = explode("\n",$response[0]);
+			$headers['status'] = $header_data[0]; // Does not contain a key, have to explicitly set
+			array_shift($header_data); // Remove status, we've already set it above
+			foreach($header_data as $part) {
+				$h = explode(":", $part);
+				$headers[trim($h[0])] = trim($h[1]);
+			}
+			// Return headers and Shopify's response
+			return array('headers' => $headers, 'response' => $response[1]);
+		}
 	}
 }
