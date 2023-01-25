@@ -23,6 +23,7 @@
 class Authentify_Installer_Core {
 
 	protected $db_instance;
+	private $app_id = 0;
 	private $app_name = '';
 	protected $slug = '';
 	private $api_key = '';
@@ -53,6 +54,7 @@ class Authentify_Installer_Core {
 		$app_data = $this->db_instance->authentify_app_by_key($key);
 		if(isset($app_data) && !empty($app_data)){
 			extract($app_data);
+			$this->app_id = $auth_app_id;
 			$this->app_name = $app_name;
 			$this->slug = $app_slug;
 			$this->api_key = $app_key;

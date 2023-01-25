@@ -58,7 +58,7 @@ final class Authentify_Db_Core {
 		$this->authentifydb->insert(
 			$this->authentifydb->prefix . 'authentify_tokens', 
 			array( 
-				'app_unique_id' => $appid,
+				'auth_app_id' => $appid,
 				'auth_host_id' => $hid,
 				'token' => $token,
 				'created' => $created,
@@ -76,7 +76,54 @@ final class Authentify_Db_Core {
 		return $this->authentifydb->insert_id;
 	}
 
+	public function authentify_update_host($host, $u_id, $shop){
+		//chech the init nonce of this class.
+		$this->authentifydb->update( 
+			$this->authentifydb->prefix . 'authentify_hosts',
+			array(
+				'user_id' => $u_id,
+			), 
+			array( 
+				'host' => $host,
+				'shop' => $shop,
+			) 
+		);
+	}
+
+	public function authentify_update_token($appid, $token, $hid){
+		//chech the init nonce of this class.
+		$created = date('Y-m-d');
+		$expired = date('Y-m-d', strtotime('+7 day', strtotime($created)));
+		$this->authentifydb->update( 
+			$this->authentifydb->prefix . 'authentify_tokens',
+			array(
+				'token' => $token,
+				'created' => $created,
+				'expired' => $expired,
+			), 
+			array( 
+				'auth_host_id' => $hid,
+				'auth_app_id' => $appid,
+			) 
+		);
+	}
+
 	public function authentify_get_db(){
 		return $this->authentifydb;
+	}
+
+	public function authentify_create_user($s){
+
+		//check_nonce
+		$user_unique = str_replace('.myshopify', '@myshopify', $s);
+		$user_id        = username_exists( $user_unique );
+		$user_email = email_exists($user_unique);
+
+		if(!$user_id && !$user_email){
+			$user_password = wp_generate_password( 12, false );
+			$user_id       = wp_create_user( $user_unique, $user_password, $user_email );
+		}
+
+		return (int) $user_id;
 	}
 }

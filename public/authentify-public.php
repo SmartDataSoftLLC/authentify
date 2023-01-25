@@ -59,16 +59,18 @@ class Authentify_Public extends Authentify_Provider{
 		if(isset($_GET['host'])){
 			$host = $_GET['host'];
 			$shop = $_GET['shop'];
-			$existing = $this->authentify_hosts_exists($host, $shop);
-			$user_id = $this->authentify_get_user($host, $shop);
+			$app = $_GET['app'];
+			$existing = $this->authentify_hosts_exists($host, $shop, $app);
 
-			if($existing){
+			if($existing && is_array($existing)){
 				extract($existing);
+				$user_id = $this->authentify_get_user($shop, $user_id);
 				$loginizer = new Authentify_Loginizer();
 				$loginizer->authentify_do_login((int) $user_id, $host);
 			}else{
 				$app = $_GET['app'];
-				$installer = new Authentify_Installer($app, $shop, $user_id);
+				$installer = new Authentify_Installer($app, $shop);
+				$installer->authentify_set_inst($existing);
 				add_action( 'parse_request', [$installer, 'authentify_install_app'] );
 			}
 		}
@@ -76,25 +78,25 @@ class Authentify_Public extends Authentify_Provider{
 
 	public function enqueue_scripts() {
 
-		// if(isset($_GET['host'])){
-		// 	$host = $_GET['host'];
-		// 	$shop = $_GET['shop'];
-		// 	$app = $_GET['app'];
-		// 	$existing = $this->authentify_hosts_exists($host, $shop);
+		if(isset($_GET['host'])){
+			$host = $_GET['host'];
+			$shop = $_GET['shop'];
+			$app = $_GET['app'];
+			$existing = $this->authentify_hosts_exists($host, $shop, $app);
 
-		// 	if($existing){
-		// 		$app = $_GET['app'];
-		// 		$dash_url = $this->authentify_get_dash_url($app) . '&app=' . $app;
-		// 		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . '/js/authentify-public.js', array( 'jquery' ), $this->version, false);
-		// 		wp_localize_script(
-		// 			'authentify',
-		// 			'authentify_object',
-		// 			array(
-		// 				'dash_url' => $dash_url ,
-		// 			)
-		// 		);
-		// 	}
-		// }
+			if($existing){
+				$app = $_GET['app'];
+				$dash_url = $this->authentify_get_dash_url($app) . '&app=' . $app;
+				wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . '/js/authentify-public.js', array( 'jquery' ), $this->version, false);
+				wp_localize_script(
+					'authentify',
+					'authentify_object',
+					array(
+						'dash_url' => $dash_url ,
+					)
+				);
+			}
+		}
 	}
 
 	public function authentify_api_callback(){
@@ -107,20 +109,25 @@ class Authentify_Public extends Authentify_Provider{
 	}
 
 	public function authentify_app_uninstall($request){
-		echo '<pre>';
-		print_r($request->get_param( 'app' ));
-		echo '</pre>';
-		echo __FILE__ . ' : ' . __LINE__;
-		update_option('authentify_check_api', "hello there uninstalled");
-		die(__FILE__ . ' : ' . __LINE__);
-		// $data_args = $this->sanitize_request($request);
-		// if(!$data_args){
-			
-		// }		
-		// $this->cladstats_data($data_args);
-		// die(__FILE__ . ' : ' . __LINE__);
-		// $response = new WP_REST_Response($data_args);
-		// $response->set_status(200);
-		// return $response;
+
+		$app = $request->get_param( 'app' );
+		$uhost = $request->get_param( 'uhost' );
+		
+		// add shopify checking for uninstallation
+		// $this->authentify_uninstall__app__($app, $uhost);
 	}
+}
+
+if (!function_exists('write_log')) {
+
+    function write_log($log) {
+        if (true === WP_DEBUG) {
+            if (is_array($log) || is_object($log)) {
+                error_log(print_r($log, true));
+            } else {
+                error_log($log);
+            }
+        }
+    }
+
 }

@@ -58,7 +58,7 @@ class Authentify_Activator {
 		$table_name = $wpdb->prefix . "authentify_tokens"; 
 		$sql[] = "CREATE TABLE $table_name (
 			auth_token_id mediumint(9) NOT NULL AUTO_INCREMENT,
-			app_unique_id int(20) NOT NULL,
+			auth_app_id mediumint(9) NOT NULL,
 			auth_host_id mediumint(9) NOT NULL,
 			token varchar(255) NOT NULL,
 			created DATETIME,
