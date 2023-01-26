@@ -35,23 +35,21 @@ class Authentify_Provider {
 		}
 
 		$tables = "`{$this->db_instance->authentify_get_db()->prefix}authentify_apps` AS aa RIGHT JOIN `{$this->db_instance->authentify_get_db()->prefix}authentify_tokens` as at ON aa.auth_app_id = at.auth_app_id LEFT JOIN `{$this->db_instance->authentify_get_db()->prefix}authentify_hosts` as ah ON ah.auth_host_id = at.auth_host_id";
-
 		$prep_args = array(
 			$host,
 			$shop,
 			$app,
 		);
-
 		$query = $this->db_instance->authentify_get_db()->prepare("SELECT ah.`auth_host_id`, aa.`auth_app_id`, at.`token`, ah.`user_id` FROM $tables WHERE ah.host = %s AND ah.shop = %s AND aa.app_unique_id = %d", $prep_args );
 		$results = $this->db_instance->authentify_get_db()->get_results($query ,ARRAY_A);
-
-		
 
 		if(isset($results) && !empty($results)){
 			$results = array_pop($results);
 
 			if(isset($results['token'])){
+
 				if($results['token'] === '0' || $results['token'] == ''){
+
 					return (int) $results['auth_host_id'];
 				}
 			}
@@ -67,8 +65,8 @@ class Authentify_Provider {
 		$user = new WP_User( $uid );
 
 		if ( ! $user->exists() && $uid == 0) {
-
-			return $this->db_instance->authentify_create_user($shop_name);
+			// This means that access token is available but user does not exists. So create user or open support ticket. Need research.
+			die('We could not authenticate you as our user. Please authenticate yourself!!!!');
 		}else{
 
 			$params = $_GET;
