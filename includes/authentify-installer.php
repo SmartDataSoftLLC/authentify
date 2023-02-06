@@ -38,13 +38,12 @@ class Authentify_Installer extends Authentify_Installer_Core{
 		// this key will be used to get the api key dynamiccaly saved at database.
 		$this->app_key = $key;
 		$this->shop = $shop;
-		parent::__construct( $this->app_key );
-		// try {
-		// 	parent::__construct( $this->app_key );
-		// } catch (Exception $e) {
-		// 	echo $e->getMessage();
-		// 	die(__FILE__ . ' : ' . __LINE__);
-		// }
+		try {
+			parent::__construct( $this->app_key );
+		} catch (Exception $e) {
+			echo $e->getMessage();
+			die();
+		}
 
 		add_rewrite_rule( $this->slug . '/([a-z0-9-]+)[/]?$', 'index.php?app=' . $key, 'top' );
 		add_rewrite_rule( $this->slug_redirect . '/([a-z0-9-]+)[/]?$', 'index.php?app=' . $key, 'top' );
@@ -116,16 +115,16 @@ class Authentify_Installer extends Authentify_Installer_Core{
 
 				if($this->new_inst === true){
 					$this->user = $this->db_instance->authentify_create_user($this->shop);
-					$hostt = $this->db_instance->authentify_add_host($host, $this->user, $this->shop);
+					$hostt = $this->db_instance->authentify_add_shop($this->user, $this->shop);
 					$token = $this->db_instance->authentify_add_token($this->authentify_get_install_data('app_id'), $this->authentify_get_access_token(), $hostt);	
 				}else{
 					// update host and token when reinstalling
 					$this->user = $this->db_instance->authentify_create_user($this->shop);
-					$this->db_instance->authentify_update_host($host, $this->user, $this->shop);
+					$this->db_instance->authentify_update_shop($this->user, $this->shop);
 					$this->db_instance->authentify_update_token($this->authentify_get_install_data('app_id'), $this->authentify_get_access_token(), $this->new_inst);
 				}
-				$this->authentify_register_uninstallation($host);
-				$this->authentify_do_login($host);
+				$this->authentify_register_uninstallation($this->shop);
+				$this->authentify_do_login($this->shop);
 			} else {
 				// Someone is trying to be shady!
 				die('This request is NOT from Shopify!');
@@ -143,11 +142,11 @@ class Authentify_Installer extends Authentify_Installer_Core{
 		$loginizer->authentify_do_login($this->user, $h);
 	}
 
-	private function authentify_register_uninstallation($h){
+	private function authentify_register_uninstallation($s){
 		$array = array(
 			'webhook' => array(
 				'topic' => 'app/uninstalled', 
-				'address' => 'https://essential-grid/wp-json/authentify_api/v1/uninstall-app/?app=' . $this->app_key . '&uhost=' . $h,
+				'address' => 'https://essgrid.shopidevs.com/wp-json/authentify_api/v1/uninstall-app/?app=' . $this->app_key . '&ushop=' . $s,
 				// 'address' => 'https://essential-grid/generating_api/uninstall.php?app' . $this->app_key . '&host=' . $h,
 				'format' => 'json',
 			)

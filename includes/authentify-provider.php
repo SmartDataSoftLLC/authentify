@@ -28,19 +28,18 @@ class Authentify_Provider {
 		$this->db_instance = new Authentify_Db_Core();
 	}
 
-	protected function authentify_hosts_exists($host, $shop, $app){
+	protected function authentify_shop_exists($host, $shop, $app){
 		if(!$host || !$shop){
 
 			return false;
 		}
 
-		$tables = "`{$this->db_instance->authentify_get_db()->prefix}authentify_apps` AS aa RIGHT JOIN `{$this->db_instance->authentify_get_db()->prefix}authentify_tokens` as at ON aa.auth_app_id = at.auth_app_id LEFT JOIN `{$this->db_instance->authentify_get_db()->prefix}authentify_hosts` as ah ON ah.auth_host_id = at.auth_host_id";
+		$tables = "`{$this->db_instance->authentify_get_db()->prefix}authentify_apps` AS aa RIGHT JOIN `{$this->db_instance->authentify_get_db()->prefix}authentify_tokens` as at ON aa.auth_app_id = at.auth_app_id LEFT JOIN `{$this->db_instance->authentify_get_db()->prefix}authentify_shops` as ah ON ah.auth_shop_id = at.auth_shop_id";
 		$prep_args = array(
-			$host,
 			$shop,
 			$app,
 		);
-		$query = $this->db_instance->authentify_get_db()->prepare("SELECT ah.`auth_host_id`, aa.`auth_app_id`, at.`token`, ah.`user_id` FROM $tables WHERE ah.host = %s AND ah.shop = %s AND aa.app_unique_id = %d", $prep_args );
+		$query = $this->db_instance->authentify_get_db()->prepare("SELECT ah.`auth_shop_id`, aa.`auth_app_id`, at.`token`, ah.`user_id` FROM $tables WHERE ah.shop = %s AND aa.app_unique_id = %d", $prep_args );
 		$results = $this->db_instance->authentify_get_db()->get_results($query ,ARRAY_A);
 
 		if(isset($results) && !empty($results)){
@@ -50,7 +49,7 @@ class Authentify_Provider {
 
 				if($results['token'] === '0' || $results['token'] == ''){
 
-					return (int) $results['auth_host_id'];
+					return (int) $results['auth_shop_id'];
 				}
 			}
 
@@ -106,7 +105,7 @@ class Authentify_Provider {
 			$hmac,
 			$host,
 		);
-		$query = $this->db_instance->authentify_get_db()->prepare("SELECT * FROM `{$this->db_instance->authentify_get_db()->prefix}authentify_tokens` AS at WHERE at.token = %s AND at.auth_host_id = %d", $prep_args );
+		$query = $this->db_instance->authentify_get_db()->prepare("SELECT * FROM `{$this->db_instance->authentify_get_db()->prefix}authentify_tokens` AS at WHERE at.token = %s AND at.auth_shop_id = %d", $prep_args );
 		$results = $this->db_instance->authentify_get_db()->get_results($query, ARRAY_A);
 
 		if(isset($results) && !empty($results)){

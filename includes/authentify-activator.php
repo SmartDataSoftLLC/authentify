@@ -32,14 +32,13 @@ class Authentify_Activator {
 	public static function activate() {
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
-		$table_name = $wpdb->prefix . "authentify_hosts"; 
+		$table_name = $wpdb->prefix . "authentify_shops"; 
 		$sql[] = "CREATE TABLE $table_name (
-			auth_host_id mediumint(9) NOT NULL AUTO_INCREMENT,
-			host varchar(255) NOT NULL,
-			user_id mediumint(9) NOT NULL,
+			auth_shop_id mediumint(9) NOT NULL AUTO_INCREMENT,
 			shop varchar(255) NOT NULL,
+			user_id mediumint(9) NOT NULL,
 			active int(3) NOT NULL,
-			PRIMARY KEY  (auth_host_id)
+			PRIMARY KEY  (auth_shop_id)
 		) $charset_collate;";
 		$table_name = $wpdb->prefix . "authentify_apps"; 
 		$sql[] = "CREATE TABLE $table_name (
@@ -59,7 +58,7 @@ class Authentify_Activator {
 		$sql[] = "CREATE TABLE $table_name (
 			auth_token_id mediumint(9) NOT NULL AUTO_INCREMENT,
 			auth_app_id mediumint(9) NOT NULL,
-			auth_host_id mediumint(9) NOT NULL,
+			auth_shop_id mediumint(9) NOT NULL,
 			token varchar(255) NOT NULL,
 			created DATETIME,
 			expired DATETIME,

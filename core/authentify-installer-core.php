@@ -42,11 +42,11 @@ class Authentify_Installer_Core {
 	 */
 	protected function __construct( $key ) {
 		$this->db_instance = new Authentify_Db_Core();
-		// $coreinit = $this->authentify_installer_set_app_data($key);
-		// if(!$coreinit){
-		// 	throw new Exception("Not our app!!!! Who are you bro????");
-		// }
-		$this->authentify_installer_set_app_data($key);
+		$coreinit = $this->authentify_installer_set_app_data($key);
+
+		if(!$coreinit){
+			throw new Exception("Not our app!!!! Who are you bro????");
+		}
 	}
 
 	private function authentify_installer_set_app_data($key){
@@ -62,11 +62,10 @@ class Authentify_Installer_Core {
 			$this->scopes = implode(",",json_decode($app_sopes, true));
 			$this->slug_redirect = $app_slug . '_redirect';
 			$this->dash_menu_url = $dash_menu_url;
-			// return true;
+			return true;
+		}else{
+			return false;
 		}
-		// else{
-		// 	// return false;
-		// }
 	}
 
 	protected function authentify_get_install_data($name){

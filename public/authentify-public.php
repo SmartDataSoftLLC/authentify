@@ -60,7 +60,7 @@ class Authentify_Public extends Authentify_Provider{
 			$host = $_GET['host'];
 			$shop = $_GET['shop'];
 			$app = $_GET['app'];
-			$existing = $this->authentify_hosts_exists($host, $shop, $app);
+			$existing = $this->authentify_shop_exists($host, $shop, $app);
 
 			if($existing && is_array($existing)){
 				extract($existing);
@@ -82,7 +82,7 @@ class Authentify_Public extends Authentify_Provider{
 			$host = $_GET['host'];
 			$shop = $_GET['shop'];
 			$app = $_GET['app'];
-			$existing = $this->authentify_hosts_exists($host, $shop, $app);
+			$existing = $this->authentify_shop_exists($host, $shop, $app);
 
 			if($existing){
 				$app = $_GET['app'];

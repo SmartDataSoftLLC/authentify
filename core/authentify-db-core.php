@@ -30,20 +30,18 @@ final class Authentify_Db_Core {
 		}
 	}
 
-	public function authentify_add_host($host, $u_id, $shop){
+	public function authentify_add_shop($u_id, $shop){
 		//chech the init nonce of this class.
 		$this->authentifydb->insert(
-			$this->authentifydb->prefix . 'authentify_hosts', 
+			$this->authentifydb->prefix . 'authentify_shops', 
 			array( 
-				'host' => $host, 
-				'user_id' => $u_id,
 				'shop' => $shop,
+				'user_id' => $u_id,
 				'active' => 1,
 			), 
-			array( 
-				'%s', 
-				'%d',
+			array(
 				'%s',
+				'%d',
 				'%d',
 			) 
 		);
@@ -59,7 +57,7 @@ final class Authentify_Db_Core {
 			$this->authentifydb->prefix . 'authentify_tokens', 
 			array( 
 				'auth_app_id' => $appid,
-				'auth_host_id' => $hid,
+				'auth_shop_id' => $hid,
 				'token' => $token,
 				'created' => $created,
 				'expired' => $expired,
@@ -76,15 +74,14 @@ final class Authentify_Db_Core {
 		return $this->authentifydb->insert_id;
 	}
 
-	public function authentify_update_host($host, $u_id, $shop){
+	public function authentify_update_shop($u_id, $shop){
 		//chech the init nonce of this class.
 		$this->authentifydb->update( 
-			$this->authentifydb->prefix . 'authentify_hosts',
+			$this->authentifydb->prefix . 'authentify_shops',
 			array(
 				'user_id' => $u_id,
 			), 
 			array( 
-				'host' => $host,
 				'shop' => $shop,
 			) 
 		);
@@ -102,7 +99,7 @@ final class Authentify_Db_Core {
 				'expired' => $expired,
 			), 
 			array( 
-				'auth_host_id' => $hid,
+				'auth_shop_id' => $hid,
 				'auth_app_id' => $appid,
 			) 
 		);
