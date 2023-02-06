@@ -64,7 +64,7 @@ class Authentify_Public extends Authentify_Provider{
 
 			if($existing && is_array($existing)){
 				extract($existing);
-				$user_id = $this->authentify_get_user($shop, $user_id);
+				$user_id = $this->authentify_get_user($shop, $app_secret, $user_id);
 				$loginizer = new Authentify_Loginizer();
 				$loginizer->authentify_do_login((int) $user_id, $host);
 			}else{

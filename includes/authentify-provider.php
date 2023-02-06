@@ -39,7 +39,7 @@ class Authentify_Provider {
 			$shop,
 			$app,
 		);
-		$query = $this->db_instance->authentify_get_db()->prepare("SELECT ah.`auth_shop_id`, aa.`auth_app_id`, at.`token`, ah.`user_id` FROM $tables WHERE ah.shop = %s AND aa.app_unique_id = %d", $prep_args );
+		$query = $this->db_instance->authentify_get_db()->prepare("SELECT aa.`app_secret`, ah.`auth_shop_id`, aa.`auth_app_id`, at.`token`, ah.`user_id` FROM $tables WHERE ah.shop = %s AND aa.app_unique_id = %d", $prep_args );
 		$results = $this->db_instance->authentify_get_db()->get_results($query ,ARRAY_A);
 
 		if(isset($results) && !empty($results)){
@@ -59,12 +59,12 @@ class Authentify_Provider {
 		return false;
 	}
 
-	protected function authentify_get_user($shop_name, $uid = 0){
+	protected function authentify_get_user($shop_name, $secret, $uid = 0){
 
 		$user = new WP_User( $uid );
 
-		if ( ! $user->exists() && $uid == 0) {
-			// This means that access token is available but user does not exists. So create user or open support ticket. Need research.
+		if ( ! $user->exists()) {
+			// This means that access token is available but user does not exists. So create user or open support ticket. Give form to put shop name and tohers and create user and login.
 			die('We could not authenticate you as our user. Please authenticate yourself!!!!');
 		}else{
 
@@ -74,24 +74,16 @@ class Authentify_Provider {
 			unset($params['hmac']);
 			// unset($params['app']);			
 			ksort($params); // Sort params lexographically
-			$computed_hmac = hash_hmac('sha256', http_build_query($params), '56e2a726170d9fe156d54bdea482a8c6');
+			$computed_hmac = hash_hmac('sha256', http_build_query($params), $secret);
 
 			// Use hmac data to check that the response is from Shopify or not
 			if (hash_equals($hmac, $computed_hmac)) {
 				// Set variables for our request
-				die(__FILE__ . ' : ' . __LINE__);
+				return $user->ID;
 			} else {
 				// Someone is trying to be shady!
 				die('This request is NOT from Shopify!');
 			}
-
-			// if($uid != 0){
-
-			// 	return $user->ID;
-			// }else{
-
-			// 	// Check if reinstalling or not by payment api
-			// }
 		}
 	}
 
