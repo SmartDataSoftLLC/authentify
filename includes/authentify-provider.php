@@ -67,7 +67,6 @@ class Authentify_Provider {
 			// This means that access token is available but user does not exists. So create user or open support ticket. Give form to put shop name and tohers and create user and login.
 			die('We could not authenticate you as our user. Please authenticate yourself!!!!');
 		}else{
-
 			$params = $_GET;
 			$hmac = $params['hmac'];
 			$host = $params['host'];

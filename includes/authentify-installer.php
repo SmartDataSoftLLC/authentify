@@ -146,8 +146,7 @@ class Authentify_Installer extends Authentify_Installer_Core{
 		$array = array(
 			'webhook' => array(
 				'topic' => 'app/uninstalled', 
-				'address' => 'https://essgrid.shopidevs.com/wp-json/authentify_api/v1/uninstall-app/?app=' . $this->app_key . '&ushop=' . $s,
-				// 'address' => 'https://essential-grid/generating_api/uninstall.php?app' . $this->app_key . '&host=' . $h,
+				'address' => 'https://essgrid.shopidevs.com/authentify/api/v1/uninstaller.php?app=' . $this->app_key . '&ushop=' . $s,
 				'format' => 'json',
 			)
 		);
