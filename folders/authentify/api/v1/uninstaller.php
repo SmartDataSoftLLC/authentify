@@ -13,20 +13,22 @@ class Authentify_Uninstaller extends DatabaseClass{
 	}
 
   	private function uninstall_app(){
+
+		$userid = $this->remove_token();
+		$this->delete_user($userid);
 		$res = '';
 		$hmac_header = $_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'];
 		$topic_header = $_SERVER['HTTP_X_SHOPIFY_TOPIC'];
 		$shop_header = $_SERVER['HTTP_X_SHOPIFY_SHOP_DOMAIN'];
 		$data = file_get_contents('php://input');
 		$decoded_data = json_decode($data, true);
-
 		$verified = $this->verify_webhook($data, $hmac_header);
 
 		if( $verified == true ) {
 			if( $topic_header == 'app/uninstalled' || $topic_header == 'shop/update') {
 				if( $topic_header == 'app/uninstalled' ) {
-					$this->remove_token();
-					// $this->delete_user();
+					$userid = $this->remove_token();
+					$this->delete_user($userid);
 				} else {
 					$res = $data;
 				}
@@ -34,8 +36,7 @@ class Authentify_Uninstaller extends DatabaseClass{
 		} else {
 			$res = 'The request is not from Shopify';
 		}
-
-		error_log('Response: '. $res); //check error.log to see the result
+		error_log('Response: '. $res , 3, __DIR__); //check error.log to see the result
 		
   	}
 
@@ -45,18 +46,17 @@ class Authentify_Uninstaller extends DatabaseClass{
 		return hash_equals($hmac_header, $calculated_hmac);
 	}
 
-	private function delete_user(){
-
-		$shop = $_GET['ushop'];
-		// $sql = "DELETE FROM {$this->prefix}users WHERE store_url='".$shop_header."' LIMIT 1";
+	private function delete_user($u){
+		$sql = "DELETE FROM {$this->prefix}users WHERE ID=". (int) $u;
+		$this->execute($sql);
 	}
 
 	private function remove_token(){
 		$shop = $_GET['ushop'];
 		$app = $_GET['app'];
 		$date = date('Y-m-d');
-		$tables = "`{$this->prefix}apps` AS aa RIGHT JOIN `{$this->prefix}authentify_tokens` as at ON aa.auth_app_id = at.auth_app_id LEFT JOIN `{$this->prefix}authentify_shops` as ah ON ah.auth_shop_id = at.auth_shop_id";
-		$sql = "SELECT aa.`auth_app_id`, ah.auth_shop_id FROM $tables WHERE ah.shop = '$shop' AND aa.app_unique_id = $app";
+		$tables = "`{$this->prefix}authentify_apps` AS aa RIGHT JOIN `{$this->prefix}authentify_tokens` as at ON aa.auth_app_id = at.auth_app_id LEFT JOIN `{$this->prefix}authentify_shops` as ah ON ah.auth_shop_id = at.auth_shop_id";
+		$sql = "SELECT aa.`auth_app_id`, ah.auth_shop_id, ah.user_id FROM $tables WHERE ah.shop = '$shop' AND aa.app_unique_id = $app";
 		$result = $this->execute($sql, true);
 
 		if(is_array($result) && !empty($result)){
@@ -64,6 +64,7 @@ class Authentify_Uninstaller extends DatabaseClass{
 			SET token = '0', expired = '$date'
 			WHERE auth_app_id = " . $result['auth_app_id'] . " AND auth_shop_id = " . $result['auth_shop_id'] . ";";
 			$this->execute($update_sql);
+			return $result['user_id'];
 		}
 	}
 

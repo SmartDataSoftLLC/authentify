@@ -29,6 +29,7 @@ class Authentify_Provider {
 	}
 
 	protected function authentify_shop_exists($host, $shop, $app){
+
 		if(!$host || !$shop){
 
 			return false;
