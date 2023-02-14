@@ -104,14 +104,18 @@ class Authentify_Installer extends Authentify_Installer_Core{
 				curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($query));
 				$result = curl_exec($ch);
 				curl_close($ch);
-				
+
 				// Store the access token
 				$result = json_decode($result, true);
-				
+
 				if(isset($result['access_token'])){
 					$access_token = $result['access_token'];
 					$this->authentify_set_acc_token($access_token);
 				}
+				// else{
+				// 	die("Token Generation Falied. Please Try Again");
+				// 	die(__FILE__ . ' : ' . __LINE__);
+				// }
 
 				if($this->new_inst === true){
 					$this->user = $this->db_instance->authentify_create_user($this->shop);
