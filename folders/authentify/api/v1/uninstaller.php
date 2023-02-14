@@ -13,9 +13,6 @@ class Authentify_Uninstaller extends DatabaseClass{
 	}
 
   	private function uninstall_app(){
-
-		$this->remove_token();
-		$this->delete_user();
 		$res = '';
 		$hmac_header = $_SERVER['HTTP_X_SHOPIFY_HMAC_SHA256'];
 		$topic_header = $_SERVER['HTTP_X_SHOPIFY_TOPIC'];
