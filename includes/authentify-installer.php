@@ -60,11 +60,6 @@ class Authentify_Installer extends Authentify_Installer_Core{
 
 	public function authentify_install_app($param){
 
-		echo '<pre>';
-		print_r($param->query_vars);
-		echo '</pre>';
-		echo __FILE__ . ' : ' . __LINE__;
-		die(__FILE__ . ' : ' . __LINE__);
 		if (isset($param->query_vars['app']) && $param->query_vars['app'] == $this->app_key && $param->query_vars['name'] == $this->slug) {
 			
 			// Need to get this url from a function
