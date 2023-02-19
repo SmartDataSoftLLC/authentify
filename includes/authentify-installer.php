@@ -60,7 +60,12 @@ class Authentify_Installer extends Authentify_Installer_Core{
 
 	public function authentify_install_app($param){
 
-		if (isset($param->query_vars['app']) && $param->query_vars['app'] == $this->app_key && $param->query_vars['pagename'] == $this->slug) {
+		echo '<pre>';
+		print_r($param->query_vars);
+		echo '</pre>';
+		echo __FILE__ . ' : ' . __LINE__;
+		die(__FILE__ . ' : ' . __LINE__);
+		if (isset($param->query_vars['app']) && $param->query_vars['app'] == $this->app_key && $param->query_vars['name'] == $this->slug) {
 			
 			// Need to get this url from a function
 			$param_qs = [
@@ -73,14 +78,14 @@ class Authentify_Installer extends Authentify_Installer_Core{
 			// Redirect
 			header('Location: ' . $install_url);
 			die();
-		}elseif(isset($param->query_vars['app']) && $param->query_vars['app'] == $this->app_key && $param->query_vars['pagename'] == $this->slug_redirect){
+		}elseif(isset($param->query_vars['app']) && $param->query_vars['app'] == $this->app_key && $param->query_vars['name'] == $this->slug_redirect){
 			
 			$params = $param->query_vars;
 			$hmac = $params['hmac'];
 			$host = $params['host'];
 			$params['shop'] = $this->shop;
 			unset($params['page']);
-			unset($params['pagename']);
+			unset($params['name']);
 			unset($params['hmac']);
 			// unset($params['app']);			
 			ksort($params); // Sort params lexographically
