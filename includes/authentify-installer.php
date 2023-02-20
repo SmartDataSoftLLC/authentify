@@ -118,14 +118,18 @@ class Authentify_Installer extends Authentify_Installer_Core{
 				// }
 
 				if($this->new_inst === true){
+					do_action('authentify_before_new_install_' . $this->slug, $this->shop, $this->authentify_get_access_token());
 					$this->user = $this->db_instance->authentify_create_user($this->shop);
 					$hostt = $this->db_instance->authentify_add_shop($this->user, $this->shop);
-					$token = $this->db_instance->authentify_add_token($this->authentify_get_install_data('app_id'), $this->authentify_get_access_token(), $hostt);	
+					$token = $this->db_instance->authentify_add_token($this->authentify_get_install_data('app_id'), $this->authentify_get_access_token(), $hostt);
+					do_action('authentify_after_new_install_' . $this->slug, $this->user);	
 				}else{
 					// update host and token when reinstalling
+					do_action('authentify_before_reinstall_' . $this->slug, $this->shop, $this->authentify_get_access_token());
 					$this->user = $this->db_instance->authentify_create_user($this->shop);
 					$this->db_instance->authentify_update_shop($this->user, $this->shop);
 					$this->db_instance->authentify_update_token($this->authentify_get_install_data('app_id'), $this->authentify_get_access_token(), $this->new_inst);
+					do_action('authentify_after_reinstall_' . $this->slug, $this->user);	
 				}
 				$this->authentify_register_uninstallation($this->shop);
 				$this->authentify_do_login($this->shop);
